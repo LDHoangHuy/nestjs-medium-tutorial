@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
+import { IsEmail } from 'class-validator';
 
 @Injectable()
 export class AuthService {
@@ -48,10 +49,19 @@ export class AuthService {
 
     if (!user) throw new ForbiddenException('Credentials incorrect');
 
-    const pwMatches = await bcrypt.compare(dto.password, user.password);
-    if (!pwMatches) throw new ForbiddenException('Credentials incorrect');
+    const isValidPassword = await bcrypt.compare(dto.password, user.password);
+    if (!isValidPassword) throw new ForbiddenException('Credentials incorrect');
 
-    return this.signToken(user.id, user.username, user.email);
+    const { email, username, bio, image } = user;
+    const token = await this.signToken(user.id, user.username, user.email);
+    const filteredUser = {
+      email,
+      token: token['access_token'],
+      username,
+      bio,
+      image,
+    };
+    return filteredUser;
   }
 
   private async signToken(
