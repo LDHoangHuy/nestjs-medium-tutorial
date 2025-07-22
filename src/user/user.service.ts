@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class UserService {
@@ -27,7 +28,7 @@ export class UserService {
     return this.excludePrivateInfo(updated);
   }
 
-  private excludePrivateInfo(user: any) {
+  private excludePrivateInfo(user: User) {
     const { id, password, createdAt, updatedAt, ...rest } = user;
     return rest;
   }
