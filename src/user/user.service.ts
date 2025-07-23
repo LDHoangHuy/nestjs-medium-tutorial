@@ -15,14 +15,14 @@ export class UserService {
     return this.excludePrivateInfo(user);
   }
 
-  async updateUser(userId: number, dto: UpdateUserDto) {
-    if (dto.password) {
-      dto.password = await bcrypt.hash(dto.password, 10);
+  async updateUser(userId: number, updateUserDto: UpdateUserDto) {
+    if (updateUserDto.password) {
+      updateUserDto.password = await bcrypt.hash(updateUserDto.password, 10);
     }
 
     const updated = await this.prisma.user.update({
       where: { id: userId },
-      data: dto,
+      data: updateUserDto,
     });
 
     return this.excludePrivateInfo(updated);

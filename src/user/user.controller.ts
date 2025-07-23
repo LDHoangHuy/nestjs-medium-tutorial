@@ -21,9 +21,9 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Put()
-  async updateUser(@Req() req: RequestUser, @Body('user') dto: UpdateUserDto) {
+  async updateUser(@Req() req: RequestUser, @Body('user') updateUserDto: UpdateUserDto) {
     const userId = req.user.sub;
-    const userUpdated = await this.userService.updateUser(userId, dto);
+    const userUpdated = await this.userService.updateUser(userId, updateUserDto);
     return { user: userUpdated };
   }
 }
