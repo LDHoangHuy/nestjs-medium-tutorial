@@ -14,12 +14,33 @@ datasource db {
 }
 
 model User {
-  id        Int     @id @default(autoincrement())
-  email     String  @unique
-  username  String  @unique
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  username  String   @unique
   password  String
-  bio       String? @default("")
-  image     String? @default("")
+  bio       String?  @default("")
+  image     String?  @default("")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  articles Article[]
+}
+
+model Article {
+  id          Int      @id @default(autoincrement())
+  title       String
+  slug        String   @unique
+  description String
+  body        String
+  tagList     Tag[]    @relation("ArticleTags")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  authorId    Int
+  author      User     @relation(fields: [authorId], references: [id])
+}
+
+model Tag {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  articles Article[] @relation("ArticleTags")
 }
