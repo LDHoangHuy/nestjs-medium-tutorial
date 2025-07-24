@@ -1,7 +1,15 @@
 import {
-  Controller, Post, Get, Delete, Param, Body, Req, UseGuards,
+  Controller,
+  Post,
+  Get,
+  Delete,
+  Param,
+  Body,
+  Req,
+  UseGuards,
   HttpCode,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -17,18 +25,30 @@ export class CommentsController {
   @Post()
   async create(
     @Param('slug') slug: string,
-    @Body('comment') dto: CreateCommentDto,
+    @Body('comment') createCommentDto: CreateCommentDto,
     @Req() req: RequestUser,
-  ): Promise<CommentEntity> {
-    const comment = await this.commentsService.create(slug, req.user.sub, dto);
-    return new CommentEntity(comment);
+  ): Promise<{ comment: CommentEntity}> {
+    const comment = await this.commentsService.create(
+      slug,
+      req.user.sub,
+      createCommentDto,
+    );
+    return { comment: new CommentEntity(comment) };
   }
 
   @Get()
-  async findAll(@Param('slug') slug: string): Promise<{ comments: CommentEntity[] }> {
-    const comments = await this.commentsService.findByArticleSlug(slug);
+  async findAll(
+    @Param('slug') slug: string,
+    @Query('limit') limit = 10,
+    @Query('offset') offset = 0,
+  ): Promise<{ comments: CommentEntity[] }> {
+    const comments = await this.commentsService.findByArticleSlug(
+      slug,
+      +limit,
+      +offset,
+    );
     return {
-      comments: comments.map((c) => new CommentEntity(c).comment),
+      comments: comments.map((c) => new CommentEntity(c)),
     };
   }
 

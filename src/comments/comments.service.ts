@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { Comment } from '@prisma/client';
@@ -7,13 +11,17 @@ import { Comment } from '@prisma/client';
 export class CommentsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(slug: string, userId: number, dto: CreateCommentDto): Promise<Comment> {
+  async create(
+    slug: string,
+    userId: number,
+    createCommentDto: CreateCommentDto,
+  ): Promise<Comment> {
     const article = await this.prisma.article.findUnique({ where: { slug } });
     if (!article) throw new NotFoundException('Article not found');
 
     const comment = await this.prisma.comment.create({
       data: {
-        body: dto.body,
+        body: createCommentDto.body,
         authorId: userId,
         articleId: article.id,
       },
@@ -25,7 +33,11 @@ export class CommentsService {
     return comment;
   }
 
-  async findByArticleSlug(slug: string): Promise<Comment[]> {
+  async findByArticleSlug(
+    slug: string,
+    take = 10,
+    skip = 0,
+  ): Promise<Comment[]> {
     const article = await this.prisma.article.findUnique({
       where: { slug },
     });
@@ -35,6 +47,8 @@ export class CommentsService {
       where: { articleId: article.id },
       include: { author: true },
       orderBy: { createdAt: 'desc' },
+      take,
+      skip,
     });
 
     return comments;
