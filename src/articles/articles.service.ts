@@ -1,8 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import slugify from 'slugify';
+import { Article, Tag, User } from '@prisma/client';
 
 @Injectable()
 export class ArticlesService {
@@ -41,7 +46,9 @@ export class ArticlesService {
     return article;
   }
 
-  async findBySlug(slug: string) {
+  async findBySlug(
+    slug: string,
+  ): Promise<Article & { tagList: Tag[]; author: User }> {
     const article = await this.prisma.article.findUnique({
       where: { slug },
       include: {
@@ -59,8 +66,12 @@ export class ArticlesService {
       include: { tagList: true },
     });
 
-    if (!existing) throw new NotFoundException('Article not found');
-    if (existing.authorId !== userId) throw new Error('Unauthorized');
+    if (!existing) {
+      throw new NotFoundException('Article not found');
+    }
+    if (existing.authorId !== userId) {
+      throw new ForbiddenException('Unauthorized');
+    }
 
     let newSlug = slug;
     if (dto.title) {
@@ -101,10 +112,14 @@ export class ArticlesService {
 
   async remove(slug: string, userId: number) {
     const article = await this.prisma.article.findUnique({ where: { slug } });
-    if (!article) throw new NotFoundException('Article not found');
-    if (article.authorId !== userId) throw new Error('Unauthorized');
+    if (!article) {
+      throw new NotFoundException('Article not found');
+    } 
+    if (article.authorId !== userId) {
+      throw new ForbiddenException('Unauthorized');
+    }
 
     await this.prisma.article.delete({ where: { slug } });
-    return { message: 'Deleted successfully' };
+    return;
   }
 }

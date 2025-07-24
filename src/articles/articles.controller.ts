@@ -1,5 +1,15 @@
 import {
-  Controller, Get, Post, Body, Param, Delete, Put, UseGuards, Req
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  Put,
+  UseGuards,
+  Req,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { ArticlesService } from './articles.service';
 import { CreateArticleDto } from './dto/create-article.dto';
@@ -20,7 +30,10 @@ export class ArticlesController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  async create(@Body('article') dto: CreateArticleDto, @Req() req: RequestUser) {
+  async create(
+    @Body('article') dto: CreateArticleDto,
+    @Req() req: RequestUser,
+  ): Promise<ArticleEntity> {
     const article = await this.articlesService.create(req.user.sub, dto);
     return new ArticleEntity(article);
   }
@@ -38,6 +51,7 @@ export class ArticlesController {
 
   @UseGuards(JwtAuthGuard)
   @Delete(':slug')
+  @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('slug') slug: string, @Req() req: RequestUser) {
     return this.articlesService.remove(slug, req.user.sub);
   }
