@@ -17,14 +17,17 @@ import { UpdateArticleDto } from './dto/update-article.dto';
 import { JwtAuthGuard } from 'src/auth/guards/auth.guard';
 import { RequestUser } from 'src/auth/interfaces/request-user.interface';
 import { ArticleEntity } from './entities/article.entity';
+import { OptionalJwtAuthGuard } from 'src/auth/guards/optional-auth.guard';
 
 @Controller('api/articles')
 export class ArticlesController {
   constructor(private readonly articlesService: ArticlesService) {}
 
+  @UseGuards(OptionalJwtAuthGuard)
   @Get(':slug')
-  async findOne(@Param('slug') slug: string) {
-    const article = await this.articlesService.findBySlug(slug);
+  async findOne(@Param('slug') slug: string, @Req() req: RequestUser) {
+    const userId = req.user ? req.user.sub : undefined;
+    const article = await this.articlesService.findBySlug(slug, userId);
     return new ArticleEntity(article);
   }
 
@@ -54,5 +57,19 @@ export class ArticlesController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('slug') slug: string, @Req() req: RequestUser) {
     return this.articlesService.remove(slug, req.user.sub);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':slug/favorite')
+  async favorite(@Param('slug') slug: string, @Req() req: RequestUser) {
+    const article = await this.articlesService.favorite(slug, req.user.sub);
+    return new ArticleEntity(article);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':slug/favorite')
+  async unfavorite(@Param('slug') slug: string, @Req() req: RequestUser) {
+    const article = await this.articlesService.unfavorite(slug, req.user.sub);
+    return new ArticleEntity(article);
   }
 }

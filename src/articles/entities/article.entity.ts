@@ -10,8 +10,8 @@ export class ArticleEntity {
       tagList: article.tagList.map((tag: Tag) => tag.name) || [],
       createdAt: article.createdAt,
       updatedAt: article.updatedAt,
-      favorited: false,
-      favoritesCount: 0,
+      favorited: article.favorited ?? false,
+      favoritesCount: article.favoritesCount ?? 0,
       author: {
         username: article.author.username,
         bio: article.author.bio,
