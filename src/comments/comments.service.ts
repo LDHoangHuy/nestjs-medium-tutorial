@@ -6,6 +6,7 @@ import {
 import { PrismaService } from 'prisma/prisma.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { Comment } from '@prisma/client';
+import { DEFAULT_SKIP, DEFAULT_TAKE } from 'src/common/constants/pagination.constants';
 
 @Injectable()
 export class CommentsService {
@@ -35,8 +36,8 @@ export class CommentsService {
 
   async findByArticleSlug(
     slug: string,
-    take = 10,
-    skip = 0,
+    take = DEFAULT_TAKE,
+    skip = DEFAULT_SKIP,
   ): Promise<Comment[]> {
     const article = await this.prisma.article.findUnique({
       where: { slug },

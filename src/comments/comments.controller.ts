@@ -54,13 +54,13 @@ export class CommentsController {
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @HttpCode(HttpStatus.OK)
   async remove(
     @Param('slug') slug: string,
     @Param('id') id: string,
     @Req() req: RequestUser,
   ) {
     await this.commentsService.remove(slug, +id, req.user.sub);
-    return;
+    return { message: 'Comment deleted successfully' };
   }
 }
