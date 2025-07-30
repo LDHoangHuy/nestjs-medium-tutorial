@@ -26,7 +26,7 @@ export class ArticlesController {
   @UseGuards(OptionalJwtAuthGuard)
   @Get(':slug')
   async findOne(@Param('slug') slug: string, @Req() req: RequestUser) {
-    const userId = req.user ? req.user.sub : undefined;
+    const userId = req.user?.sub;
     const article = await this.articlesService.findBySlug(slug, userId);
     return new ArticleEntity(article);
   }
