@@ -8,6 +8,11 @@ import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import slugify from 'slugify';
 import { Article, Tag, User } from '@prisma/client';
+import { FilterArticlesDto } from './dto/filter-articles.dto';
+import {
+  DEFAULT_SKIP,
+  DEFAULT_TAKE,
+} from 'src/common/constants/pagination.constants';
 
 type FullArticle = Article & {
   tagList: Tag[];
@@ -64,6 +69,76 @@ export class ArticlesService {
     if (!article) throw new NotFoundException('Article not found');
 
     return this.buildFullArticleResponse(article, userId);
+  }
+
+  async findAll(query: FilterArticlesDto, userId?: number) {
+    const { tag, author, favorited } = query;
+    const limit = query.limit ?? DEFAULT_TAKE;
+    const offset = query.offset ?? DEFAULT_SKIP;
+    const page = Math.floor(offset / limit) + 1;
+
+    const where: any = {};
+
+    if (tag) {
+      where.tagList = {
+        some: {
+          name: tag,
+        },
+      };
+    }
+
+    if (author) {
+      const authorUsers = await this.prisma.user.findMany({
+        where: {
+          username: {
+            contains: author,
+          },
+        },
+        select: { id: true },
+      });
+
+      const authorIds = authorUsers.map((user) => user.id);
+
+      where.authorId = { in: authorIds };
+    }
+
+    if (favorited) {
+      const favoritedUser = await this.prisma.user.findUnique({
+        where: { username: favorited },
+        include: { favorites: true },
+      });
+
+      const favoritedArticleIds = favoritedUser?.favorites.map(
+        (fav) => fav.articleId,
+      ) || [];
+
+      where.id = { in: favoritedArticleIds };
+    }
+
+    const [articles, articlesCount] = await Promise.all([
+      this.prisma.article.findMany({
+        where,
+        include: {
+          author: true,
+          tagList: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: offset,
+        take: limit,
+      }),
+      this.prisma.article.count({ where }),
+    ]);
+
+    const articlesWithFavorite = await Promise.all(
+      articles.map((article) => this.buildFullArticleResponse(article, userId)),
+    );
+
+    return {
+      articles: articlesWithFavorite,
+      articlesCount,
+      page,
+      limit,
+    };
   }
 
   async update(

@@ -10,6 +10,7 @@ import {
   Req,
   HttpCode,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { ArticlesService } from './articles.service';
 import { CreateArticleDto } from './dto/create-article.dto';
@@ -18,6 +19,8 @@ import { JwtAuthGuard } from 'src/auth/guards/auth.guard';
 import { RequestUser } from 'src/auth/interfaces/request-user.interface';
 import { ArticleEntity } from './entities/article.entity';
 import { OptionalJwtAuthGuard } from 'src/auth/guards/optional-auth.guard';
+import { FilterArticlesDto } from './dto/filter-articles.dto';
+import { MultipleArticlesEntity } from './entities/multiple-articles.entity';
 
 @Controller('api/articles')
 export class ArticlesController {
@@ -29,6 +32,14 @@ export class ArticlesController {
     const userId = req.user?.sub;
     const article = await this.articlesService.findBySlug(slug, userId);
     return new ArticleEntity(article);
+  }
+
+  @UseGuards(OptionalJwtAuthGuard)
+  @Get()
+  async findAll(@Query() query: FilterArticlesDto, @Req() req: RequestUser) {
+    const userId = req.user?.sub;
+    const result = await this.articlesService.findAll(query, userId);
+    return new MultipleArticlesEntity(result);
   }
 
   @UseGuards(JwtAuthGuard)
